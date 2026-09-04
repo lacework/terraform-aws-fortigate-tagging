@@ -1,0 +1,13 @@
+aws_region = "us-east-1"
+
+# Optional - defaults shown
+# lambda_zip_file            = "lambda_function-v0.zip"
+# lambda_function_name       = "forticnapp_lambda"
+# event_bus_name             = "forticnapp-event-bus"
+# event_rule_name            = "forticnapp-event-bus-rule"
+# lambda_execution_role_name = "forticnapp_lambda_role"
+# tag_key                    = "fcnappalert"
+
+# AWS accounts that FortiCNAPP publishes alerts from. Override if your
+# FortiCNAPP environment publishes from a different account.
+# publisher_account_ids = ["434813966438"]
