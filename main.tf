@@ -2,12 +2,20 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Declared explicitly so retention is enforced and `terraform destroy` removes it.
+# Must exist before the first invocation, otherwise the runtime creates it implicitly.
+resource "aws_cloudwatch_log_group" "forticnapp_lambda" {
+  name              = "/aws/lambda/${var.lambda_function_name}"
+  retention_in_days = var.log_retention_days
+}
+
 resource "aws_lambda_function" "forticnapp_lambda" {
+  depends_on       = [aws_cloudwatch_log_group.forticnapp_lambda]
   filename         = var.lambda_zip_file
   function_name    = var.lambda_function_name
-  role            = aws_iam_role.lambda_exec.arn
-  handler         = "lambda_function.lambda_handler"
-  runtime         = "python3.14"
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.14"
   source_code_hash = filebase64sha256(var.lambda_zip_file)
   environment {
     variables = {
@@ -37,7 +45,7 @@ EOF
 }
 
 resource "aws_iam_policy" "ec2_tagging_policy" {
-  name = "ec2_tagging_policy"
+  name = var.tagging_policy_name
 
   policy = <<EOF
 {
@@ -73,16 +81,35 @@ resource "aws_cloudwatch_event_bus" "forticnapp_event_bus" {
   name = var.event_bus_name
 }
 
-resource "aws_cloudwatch_event_rule" "forticnapp_event_rule" {
-  name        = var.event_rule_name
+# A custom bus accepts events only from its own account until a resource policy
+# says otherwise. FortiCNAPP publishes cross-account, so without this policy the
+# alert channel test succeeds but no event is ever delivered. Same policy as
+# documented under "Amazon EventBridge Alert Channel > Creating an event bus".
+resource "aws_cloudwatch_event_bus_policy" "allow_forticnapp" {
   event_bus_name = aws_cloudwatch_event_bus.forticnapp_event_bus.name
-  event_pattern = jsonencode({ account = var.publisher_account_ids })
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "allow_account_to_put_events"
+      Effect    = "Allow"
+      Principal = { AWS = var.publisher_account_ids }
+      Action    = "events:PutEvents"
+      Resource  = aws_cloudwatch_event_bus.forticnapp_event_bus.arn
+    }]
+  })
+}
+
+resource "aws_cloudwatch_event_rule" "forticnapp_event_rule" {
+  name           = var.event_rule_name
+  event_bus_name = aws_cloudwatch_event_bus.forticnapp_event_bus.name
+  event_pattern  = jsonencode({ account = var.publisher_account_ids })
 }
 
 resource "aws_cloudwatch_event_target" "forticnapp_lambda_target" {
-  rule      = aws_cloudwatch_event_rule.forticnapp_event_rule.name
+  rule           = aws_cloudwatch_event_rule.forticnapp_event_rule.name
   event_bus_name = aws_cloudwatch_event_bus.forticnapp_event_bus.name
-  arn       = aws_lambda_function.forticnapp_lambda.arn
+  arn            = aws_lambda_function.forticnapp_lambda.arn
 }
 
 resource "aws_lambda_permission" "allow_eventbridge" {
