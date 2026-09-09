@@ -7,6 +7,7 @@ provider "aws" {
 resource "aws_cloudwatch_log_group" "forticnapp_lambda" {
   name              = "/aws/lambda/${var.lambda_function_name}"
   retention_in_days = var.log_retention_days
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_lambda_function" "forticnapp_lambda" {
@@ -17,6 +18,7 @@ resource "aws_lambda_function" "forticnapp_lambda" {
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.14"
   source_code_hash = filebase64sha256(var.lambda_zip_file)
+  kms_key_arn      = var.kms_key_arn
   environment {
     variables = {
       TAG_KEY = var.tag_key
