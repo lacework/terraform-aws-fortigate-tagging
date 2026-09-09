@@ -53,6 +53,23 @@ described under *Amazon EventBridge Alert Channel > Creating an event bus* in th
 administration guide is not needed here. Without that policy the alert channel
 test still reports success, but no event is ever delivered.
 
+### Upgrading an existing deployment
+
+If this configuration was applied before the log group was declared (any
+deployment of commit `6590fc5` or earlier), or a Lambda with the same name has
+already run in the account, the log group `/aws/lambda/<lambda_function_name>`
+already exists - the runtime creates it on the function's first invocation - and
+`terraform apply` fails with `ResourceAlreadyExistsException`. Import it once,
+after `terraform init` and before `terraform apply`:
+
+```bash
+terraform import aws_cloudwatch_log_group.forticnapp_lambda \
+  /aws/lambda/forticnapp_lambda
+```
+
+Substitute your `lambda_function_name` if you changed it. Terraform then adopts
+the group and applies the configured retention to it.
+
 ### Deploying to more than one region
 
 The Lambda tags instances only in its own region, and event buses are regional,
