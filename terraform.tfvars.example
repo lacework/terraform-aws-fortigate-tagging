@@ -7,6 +7,8 @@ aws_region = "us-east-1"
 # event_rule_name            = "forticnapp-event-bus-rule"
 # lambda_execution_role_name = "forticnapp_lambda_role"
 # tag_key                    = "fcnappalert"
+# tagging_policy_name        = "forticnapp_lambda_ec2_tagging_policy"
+# log_retention_days         = 30
 
 # AWS accounts that FortiCNAPP publishes alerts from. Override if your
 # FortiCNAPP environment publishes from a different account.
