@@ -43,3 +43,9 @@ variable "log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "kms_key_arn" {
+  description = "Optional ARN of a customer-managed KMS key used to encrypt the Lambda's environment variables and its CloudWatch log group. When null, AWS-managed encryption at rest applies. The key policy must allow the CloudWatch Logs service principal for your region (logs.<region>.amazonaws.com) to use the key."
+  type        = string
+  default     = null
+}

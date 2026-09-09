@@ -78,6 +78,7 @@ dynamic address never resolves and the policy silently never matches.
 | `tag_key` | EC2 tag key applied to the instance | `fcnappalert` |
 | `tagging_policy_name` | IAM policy name for ec2:CreateTags (global; see multi-region note) | `forticnapp_lambda_ec2_tagging_policy` |
 | `log_retention_days` | Retention for the Lambda's CloudWatch log group | `30` |
+| `kms_key_arn` | Optional customer-managed KMS key for the Lambda environment and its log group | `null` |
 | `publisher_account_ids` | FortiCNAPP publishing accounts allowed to publish to the bus and matched by the rule | `["434813966438"]` |
 
 ## Outputs
@@ -89,6 +90,19 @@ dynamic address never resolves and the policy silently never matches.
 | `lambda_function_name` | Name of the tagging Lambda |
 | `lambda_log_group_name` | Log group to check when an instance is not tagged |
 | `tag_filter` | Tag filter for the FortiGate dynamic address object |
+
+## Encryption
+
+The Lambda's environment variables and its CloudWatch log group are encrypted at
+rest with AWS-managed keys by default. The only environment variable is the tag
+key, which is not a secret, so the configuration does not create a KMS key of its
+own - that would add a billable resource to every deployment for no
+confidentiality gain.
+
+If your policy requires a customer-managed key, set `kms_key_arn` and both
+resources will use it. The key policy must allow the CloudWatch Logs service
+principal for your region (`logs.<region>.amazonaws.com`) to use the key, or log
+group creation fails.
 
 ## Known limitation
 

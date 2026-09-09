@@ -10,6 +10,9 @@ aws_region = "us-east-1"
 # tagging_policy_name        = "forticnapp_lambda_ec2_tagging_policy"
 # log_retention_days         = 30
 
+# Optional: customer-managed KMS key for the Lambda environment and its log group.
+# kms_key_arn = "arn:aws:kms:us-east-1:123456789012:key/00000000-0000-0000-0000-000000000000"
+
 # AWS accounts that FortiCNAPP publishes alerts from. Override if your
 # FortiCNAPP environment publishes from a different account.
 # publisher_account_ids = ["434813966438"]
